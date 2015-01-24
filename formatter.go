@@ -1,5 +1,9 @@
 package logrus
 
+import (
+	"bytes"
+)
+
 // The Formatter interface is used to implement a custom Formatter. It takes an
 // `Entry`. It exposes all the fields, including the default ones:
 //
@@ -11,7 +15,7 @@ package logrus
 // `entry.Data`. Format is expected to return an array of bytes which are then
 // logged to `logger.Out`.
 type Formatter interface {
-	Format(*Entry) ([]byte, error)
+	Format(*Entry, *bytes.Buffer) error
 }
 
 // This is to not silently overwrite `time`, `msg` and `level` fields when
@@ -26,19 +30,25 @@ type Formatter interface {
 //
 // It's not exported because it's still using Data in an opinionated way. It's to
 // avoid code duplication between the two default formatters.
-func prefixFieldClashes(data Fields) {
-	_, ok := data["time"]
-	if ok {
-		data["fields.time"] = data["time"]
+func prefixFieldClashes(data Fields) Fields {
+	cloned := false
+
+	for k, r := range prefixKeys {
+		_, ok := data[k]
+		if ok {
+			if !cloned {
+				data = cloneData(data)
+				cloned = true
+			}
+			data[r] = data[k]
+		}
 	}
 
-	_, ok = data["msg"]
-	if ok {
-		data["fields.msg"] = data["msg"]
-	}
+	return data
+}
 
-	_, ok = data["level"]
-	if ok {
-		data["fields.level"] = data["level"]
-	}
+var prefixKeys = map[string]string{
+	"time":  "fields.time",
+	"msg":   "fields.msg",
+	"level": "fields.level",
 }

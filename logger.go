@@ -65,97 +65,145 @@ func (logger *Logger) WithFields(fields Fields) *Entry {
 }
 
 func (logger *Logger) Debugf(format string, args ...interface{}) {
-	NewEntry(logger).Debugf(format, args...)
+	e := NewEntry(logger)
+	e.Debugf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Infof(format string, args ...interface{}) {
-	NewEntry(logger).Infof(format, args...)
+	e := NewEntry(logger)
+	e.Infof(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Printf(format string, args ...interface{}) {
-	NewEntry(logger).Printf(format, args...)
+	e := NewEntry(logger)
+	e.Printf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Warnf(format string, args ...interface{}) {
-	NewEntry(logger).Warnf(format, args...)
+	e := NewEntry(logger)
+	e.Warnf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Warningf(format string, args ...interface{}) {
-	NewEntry(logger).Warnf(format, args...)
+	e := NewEntry(logger)
+	e.Warnf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Errorf(format string, args ...interface{}) {
-	NewEntry(logger).Errorf(format, args...)
+	e := NewEntry(logger)
+	e.Errorf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Fatalf(format string, args ...interface{}) {
-	NewEntry(logger).Fatalf(format, args...)
+	e := NewEntry(logger)
+	e.Fatalf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Panicf(format string, args ...interface{}) {
-	NewEntry(logger).Panicf(format, args...)
+	e := NewEntry(logger)
+	e.Panicf(format, args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Debug(args ...interface{}) {
-	NewEntry(logger).Debug(args...)
+	e := NewEntry(logger)
+	e.Debug(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Info(args ...interface{}) {
-	NewEntry(logger).Info(args...)
+	e := NewEntry(logger)
+	e.Info(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Print(args ...interface{}) {
-	NewEntry(logger).Info(args...)
+	e := NewEntry(logger)
+	e.Info(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Warn(args ...interface{}) {
-	NewEntry(logger).Warn(args...)
+	e := NewEntry(logger)
+	e.Warn(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Warning(args ...interface{}) {
-	NewEntry(logger).Warn(args...)
+	e := NewEntry(logger)
+	e.Warn(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Error(args ...interface{}) {
-	NewEntry(logger).Error(args...)
+	e := NewEntry(logger)
+	e.Error(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Fatal(args ...interface{}) {
-	NewEntry(logger).Fatal(args...)
+	e := NewEntry(logger)
+	e.Fatal(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Panic(args ...interface{}) {
-	NewEntry(logger).Panic(args...)
+	e := NewEntry(logger)
+	e.Panic(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Debugln(args ...interface{}) {
-	NewEntry(logger).Debugln(args...)
+	e := NewEntry(logger)
+	e.Debugln(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Infoln(args ...interface{}) {
-	NewEntry(logger).Infoln(args...)
+	e := NewEntry(logger)
+	e.Infoln(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Println(args ...interface{}) {
-	NewEntry(logger).Println(args...)
+	e := NewEntry(logger)
+	e.Println(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Warnln(args ...interface{}) {
-	NewEntry(logger).Warnln(args...)
+	e := NewEntry(logger)
+	e.Warnln(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Warningln(args ...interface{}) {
-	NewEntry(logger).Warnln(args...)
+	e := NewEntry(logger)
+	e.Warnln(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Errorln(args ...interface{}) {
-	NewEntry(logger).Errorln(args...)
+	e := NewEntry(logger)
+	e.Errorln(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Fatalln(args ...interface{}) {
-	NewEntry(logger).Fatalln(args...)
+	e := NewEntry(logger)
+	e.Fatalln(args...)
+	entryPool.Put(e)
 }
 
 func (logger *Logger) Panicln(args ...interface{}) {
-	NewEntry(logger).Panicln(args...)
+	e := NewEntry(logger)
+	e.Panicln(args...)
+	entryPool.Put(e)
 }

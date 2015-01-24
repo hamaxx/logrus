@@ -1,6 +1,7 @@
 package logrus
 
 import (
+	"bytes"
 	"testing"
 	"time"
 )
@@ -76,13 +77,13 @@ func doBenchmark(b *testing.B, formatter Formatter, fields Fields) {
 		Message: "message",
 		Data:    fields,
 	}
-	var d []byte
+	d := &bytes.Buffer{}
 	var err error
 	for i := 0; i < b.N; i++ {
-		d, err = formatter.Format(entry)
+		err = formatter.Format(entry, d)
 		if err != nil {
 			b.Fatal(err)
 		}
-		b.SetBytes(int64(len(d)))
+		b.SetBytes(int64(len(d.Bytes())))
 	}
 }

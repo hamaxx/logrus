@@ -41,7 +41,7 @@ type TextFormatter struct {
 	DisableTimestamp bool
 }
 
-func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
+func (f *TextFormatter) Format(entry *Entry, out *bytes.Buffer) error {
 
 	var keys []string
 	for k := range entry.Data {
@@ -49,30 +49,28 @@ func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
 	}
 	sort.Strings(keys)
 
-	b := &bytes.Buffer{}
-
-	prefixFieldClashes(entry.Data)
+	data := prefixFieldClashes(entry.Data)
 
 	isColored := (f.ForceColors || isTerminal) && !f.DisableColors
 
 	if isColored {
-		printColored(b, entry, keys)
+		printColored(out, entry, keys, data)
 	} else {
 		if !f.DisableTimestamp {
-			f.appendKeyValue(b, "time", entry.Time.Format(time.RFC3339))
+			f.appendKeyValue(out, "time", entry.Time.Format(time.RFC3339))
 		}
-		f.appendKeyValue(b, "level", entry.Level.String())
-		f.appendKeyValue(b, "msg", entry.Message)
+		f.appendKeyValue(out, "level", entry.Level.String())
+		f.appendKeyValue(out, "msg", entry.Message)
 		for _, key := range keys {
-			f.appendKeyValue(b, key, entry.Data[key])
+			f.appendKeyValue(out, key, data[key])
 		}
 	}
 
-	b.WriteByte('\n')
-	return b.Bytes(), nil
+	out.WriteByte('\n')
+	return nil
 }
 
-func printColored(b *bytes.Buffer, entry *Entry, keys []string) {
+func printColored(b *bytes.Buffer, entry *Entry, keys []string, data Fields) {
 	var levelColor int
 	switch entry.Level {
 	case WarnLevel:
@@ -87,7 +85,7 @@ func printColored(b *bytes.Buffer, entry *Entry, keys []string) {
 
 	fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%04d] %-44s ", levelColor, levelText, miniTS(), entry.Message)
 	for _, k := range keys {
-		v := entry.Data[k]
+		v := data[k]
 		fmt.Fprintf(b, " \x1b[%dm%s\x1b[0m=%v", levelColor, k, v)
 	}
 }

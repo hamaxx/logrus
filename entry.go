@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 )
 
-// An entry is the final or intermediate Logrus logging entry. It contains all
+// Entry is the final or intermediate Logrus logging entry. It contains all
 // the fields passed with WithField{,s}. It's finally logged when Debug, Info,
 // Warn, Error, Fatal or Panic is called on it. These objects can be reused and
 // passed around as much as you wish to avoid field duplication.
@@ -28,24 +29,54 @@ type Entry struct {
 	Message string
 }
 
+var entryPool sync.Pool
+
 func NewEntry(logger *Logger) *Entry {
-	return &Entry{
-		Logger: logger,
-		// Default is three fields, give a little extra room
-		Data: make(Fields, 5),
+	var e *Entry
+
+	if v := entryPool.Get(); v != nil {
+		e = v.(*Entry)
+		if e.Data != nil {
+			for k := range e.Data {
+				delete(e.Data, k)
+			}
+		}
+	} else {
+		e = &Entry{}
 	}
+
+	e.Logger = logger
+
+	return e
 }
 
-// Returns a reader for the entry, which is a proxy to the formatter.
+var readerPool sync.Pool
+
+// Reader returns a reader for the entry, which is a proxy to the formatter.
 func (entry *Entry) Reader() (*bytes.Buffer, error) {
-	serialized, err := entry.Logger.Formatter.Format(entry)
-	return bytes.NewBuffer(serialized), err
+	var r *bytes.Buffer
+
+	if v := readerPool.Get(); v != nil {
+		r = v.(*bytes.Buffer)
+		r.Reset()
+	} else {
+		r = &bytes.Buffer{}
+	}
+
+	if entry.Data == nil {
+		entry.Data = make(Fields, 3)
+	}
+
+	err := entry.Logger.Formatter.Format(entry, r)
+
+	return r, err
 }
 
 // Returns the string representation from the reader and ultimately the
 // formatter.
 func (entry *Entry) String() (string, error) {
 	reader, err := entry.Reader()
+	defer readerPool.Put(reader)
 	if err != nil {
 		return "", err
 	}
@@ -53,21 +84,44 @@ func (entry *Entry) String() (string, error) {
 	return reader.String(), err
 }
 
-// Add a single field to the Entry.
+// WithField adds a single field to the Entry.
 func (entry *Entry) WithField(key string, value interface{}) *Entry {
-	return entry.WithFields(Fields{key: value})
+	e := NewEntry(entry.Logger)
+
+	if e.Data == nil {
+		e.Data = make(Fields, 4)
+	}
+
+	e.Data[key] = value
+
+	if entry.Data != nil {
+		for k, v := range entry.Data {
+			e.Data[k] = v
+		}
+	}
+
+	return e
 }
 
-// Add a map of fields to the Entry.
+// WithFields adds a map of fields to the Entry.
 func (entry *Entry) WithFields(fields Fields) *Entry {
-	data := Fields{}
-	for k, v := range entry.Data {
-		data[k] = v
+	e := NewEntry(entry.Logger)
+
+	if e.Data == nil {
+		e.Data = make(Fields, 3+len(fields))
 	}
+
 	for k, v := range fields {
-		data[k] = v
+		e.Data[k] = v
 	}
-	return &Entry{Logger: entry.Logger, Data: data}
+
+	if entry.Data != nil {
+		for k, v := range entry.Data {
+			e.Data[k] = v
+		}
+	}
+
+	return e
 }
 
 func (entry *Entry) log(level Level, msg string) {
@@ -82,6 +136,7 @@ func (entry *Entry) log(level Level, msg string) {
 	}
 
 	reader, err := entry.Reader()
+	defer readerPool.Put(reader)
 	if err != nil {
 		entry.Logger.mu.Lock()
 		fmt.Fprintf(os.Stderr, "Failed to obtain reader, %v\n", err)
