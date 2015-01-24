@@ -95,8 +95,6 @@ func (entry *Entry) WithFields(fields Fields) *Entry {
 }
 
 func (entry *Entry) log(level Level, msg string) {
-	defer entryPool.Put(entry)
-
 	entry.Time = time.Now()
 	entry.Level = level
 	entry.Message = msg
