@@ -17,6 +17,7 @@ func main() {
 
 	log := logrus.New()
 	log.Out = ioutil.Discard
+	//log.Out = os.Stdout
 	log.Formatter = &logrus.JSONFormatter{}
 	log.Level = logrus.DebugLevel
 
@@ -25,6 +26,7 @@ func main() {
 	for i := 0; i < 1000; i++ {
 		for j := 0; j < 100; j++ {
 			log.WithField("AAA", "BBBB").Info("Nice message alalsjlkfldkjf dkf jlsdf")
+			log.WithFields(logrus.Fields{"AAA": "BBBB"}).Info("Nice message alalsjlkfldkjf dkf jlsdf")
 			log.Info("Nice message alalsjlkfldkjf dkf jlsdf")
 		}
 		time.Sleep(time.Millisecond)

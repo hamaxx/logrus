@@ -3,7 +3,6 @@ package logrus
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"sync"
 	"time"
@@ -42,7 +41,7 @@ func NewEntry(logger *Logger) *Entry {
 			}
 		}
 	} else {
-		e = &Entry{}
+		e = &Entry{Data: make(Fields, 5)}
 	}
 
 	e.Logger = logger
@@ -61,10 +60,6 @@ func (entry *Entry) Reader() (*bytes.Buffer, error) {
 		r.Reset()
 	} else {
 		r = &bytes.Buffer{}
-	}
-
-	if entry.Data == nil {
-		entry.Data = make(Fields, 3)
 	}
 
 	err := entry.Logger.Formatter.Format(entry, r)
@@ -86,45 +81,22 @@ func (entry *Entry) String() (string, error) {
 
 // WithField adds a single field to the Entry.
 func (entry *Entry) WithField(key string, value interface{}) *Entry {
-	e := NewEntry(entry.Logger)
-
-	if e.Data == nil {
-		e.Data = make(Fields, 4)
-	}
-
-	e.Data[key] = value
-
-	if entry.Data != nil {
-		for k, v := range entry.Data {
-			e.Data[k] = v
-		}
-	}
-
-	return e
+	entry.Data[key] = value
+	return entry
 }
 
 // WithFields adds a map of fields to the Entry.
 func (entry *Entry) WithFields(fields Fields) *Entry {
-	e := NewEntry(entry.Logger)
-
-	if e.Data == nil {
-		e.Data = make(Fields, 3+len(fields))
-	}
-
 	for k, v := range fields {
-		e.Data[k] = v
+		entry.Data[k] = v
 	}
 
-	if entry.Data != nil {
-		for k, v := range entry.Data {
-			e.Data[k] = v
-		}
-	}
-
-	return e
+	return entry
 }
 
 func (entry *Entry) log(level Level, msg string) {
+	defer entryPool.Put(entry)
+
 	entry.Time = time.Now()
 	entry.Level = level
 	entry.Message = msg
@@ -146,7 +118,7 @@ func (entry *Entry) log(level Level, msg string) {
 	entry.Logger.mu.Lock()
 	defer entry.Logger.mu.Unlock()
 
-	_, err = io.Copy(entry.Logger.Out, reader)
+	_, err = reader.WriteTo(entry.Logger.Out)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to write to log, %v\n", err)
 	}

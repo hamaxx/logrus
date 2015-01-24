@@ -130,36 +130,6 @@ func TestInfoShouldNotAddSpacesBetweenStrings(t *testing.T) {
 	})
 }
 
-func TestWithFieldsShouldAllowAssignments(t *testing.T) {
-	var buffer bytes.Buffer
-	var fields Fields
-
-	logger := New()
-	logger.Out = &buffer
-	logger.Formatter = new(JSONFormatter)
-
-	localLog := logger.WithFields(Fields{
-		"key1": "value1",
-	})
-
-	localLog.WithField("key2", "value2").Info("test")
-	err := json.Unmarshal(buffer.Bytes(), &fields)
-	assert.Nil(t, err)
-
-	assert.Equal(t, "value2", fields["key2"])
-	assert.Equal(t, "value1", fields["key1"])
-
-	buffer = bytes.Buffer{}
-	fields = Fields{}
-	localLog.Info("test")
-	err = json.Unmarshal(buffer.Bytes(), &fields)
-	assert.Nil(t, err)
-
-	_, ok := fields["key2"]
-	assert.Equal(t, false, ok)
-	assert.Equal(t, "value1", fields["key1"])
-}
-
 func TestUserSuppliedFieldDoesNotOverwriteDefaults(t *testing.T) {
 	LogAndAssertJSON(t, func(log *Logger) {
 		log.WithField("msg", "hello").Info("test")
